@@ -333,7 +333,7 @@ contains
     type(glad_params), intent(in) :: params
     integer, intent(in) :: instance_index  ! index of current ice sheet index
     integer, intent(out) :: nzocn  ! number of ocean levels, needed for ocean coupling fields
-
+    
     nzocn = get_nzocn(params%instances(instance_index)%model)
 
   end subroutine glad_get_nzocn
@@ -862,15 +862,17 @@ contains
 
   !===================================================================
 
+  !subroutine compute_thermal_forcing_level(zlevel, salinity, tocn, thermal_forcing)
+  !mp, 2024-06-19: should we replace here zlevel (hard-coded, equal to 7?) with
+  !nzocn or something like that? 
   subroutine compute_thermal_forcing_level(zlevel, salinity, tocn, thermal_forcing)
-
     ! returns the thermal forcing applied under ice shelf.
     ! The forcing depends on the level of the POP ocean. At this point only 7 fixed level are considered.
     ! Freezing temperature parameters based on Beckmann, A. and Goosse (2003), equation 2.
 
     use glimmer_physcon, only: tocnfrz_const, dtocnfrz_dsal, dtocnfrz_dz
 
-    real(dp), intent(in)                  :: zlevel            ! ocean level depth (m, negative below sea level)
+    real(dp), intent(in)                  :: zlevel            ! ocean level depth (m, negative below sea level) 
     real(dp),dimension(:,:),intent(in)    :: salinity          ! input ocean salinity (g/kg)
     real(dp),dimension(:,:),intent(in)    :: tocn              ! input ocean temperature (deg C)
     real(dp),dimension(:,:),intent(out)   :: thermal_forcing   ! output thermal forcing  (deg C)
@@ -888,7 +890,7 @@ contains
     real(dp), parameter :: salinity_min = 1.0d0   ! (g/kg)
     real(dp), parameter :: tocn_max =  30.d0      ! deg C
     real(dp), parameter :: tocn_min = -10.d0      ! deg C
-
+    
     where (salinity <= salinity_min .or. salinity >= salinity_max .or. &
                tocn <= tocn_min     .or.     tocn >= tocn_max)
        thermal_forcing = unphys_val   ! defined in the glimmer_paramets module

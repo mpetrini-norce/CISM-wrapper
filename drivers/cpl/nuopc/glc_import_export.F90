@@ -721,7 +721,7 @@ contains
     ! If field exists then create output array - else do nothing
     if (itemflag /= ESMF_STATEITEM_NOTFOUND) then
        ! get field pointer
-       call state_getfldptr(state, trim(fldname), fldptr, rc)
+       call state_getfldptr_1d(state, trim(fldname), fldptr, rc)
        if (chkErr(rc,__LINE__,u_FILE_u)) return
 
        ! determine output array
@@ -741,7 +741,7 @@ contains
     ! input/output variables
     type(ESMF_State)    , intent(in)    :: state
     character(len=*)    , intent(in)    :: fldname
-    real(r8),           , intent(out)   :: output(:,:,:)
+    real(r8)            , intent(out)   :: output(:,:,:)
     integer             , intent(in)    :: instance_index  ! index of current ice sheet
     integer             , intent(out)   :: rc
 
@@ -803,105 +803,7 @@ contains
     ! if field exists then create output array - else do nothing
     if (itemflag /= ESMF_STATEITEM_NOTFOUND) then
        ! get field pointer
-       call state_getfldptr(state, trim(fldname), fldptr, rc)
-       if (chkErr(rc,__LINE__,u_FILE_u)) return
-
-       ! set fldptr values to input array
-       call spatial_to_vector(instance_index, input, fldptr)
-    end if
-
-  end subroutine state_setexport
-
-  !===============================================================================
-
-  subroutine state_getfldptr(State, fldname, fldptr, rc)
-
-    ! ----------------------------------------------
-    ! Get pointer to a state field
-    ! ----------------------------------------------
-
-    use ESMF , only : ESMF_State, ESMF_Field, ESMF_Mesh, ESMF_FieldStatus_Flag
-    use ESMF , only : ESMF_StateGet, ESMF_FieldGet, ESMF_MeshGet
-    use ESMF , only : ESMF_FIELDSTATUS_COMPLETE, ESMF_FAILURE
-
-    ! input/output variables
-    type(ESMF_State),  intent(in)    :: State
-    character(len=*),  intent(in)    :: fldname
-    real(R8), pointer, intent(out)   :: fldptr(:)
-    integer,           intent(out)   :: rc
-
-    ! local variables
-    type(ESMF_FieldStatus_Flag) :: status
-    type(ESMF_Field)            :: lfield
-    type(ESMF_Mesh)             :: lmesh
-    integer                     :: nnodes, nelements
-    character(len=*), parameter :: subname='(glc_import_export:state_getfldptr)'
-    ! ----------------------------------------------
-
-    rc = ESMF_SUCCESS
-    call ESMF_LogWrite(trim(subname)//": called", ESMF_LOGMSG_INFO)
-
-    call ESMF_StateGet(State, itemName=trim(fldname), field=lfield, rc=rc)
-    if (chkErr(rc,__LINE__,u_FILE_u)) return
-
-    call ESMF_FieldGet(lfield, status=status, rc=rc)
-    if (chkErr(rc,__LINE__,u_FILE_u)) return
-
-    if (status /= ESMF_FIELDSTATUS_COMPLETE) then
-       call ESMF_LogWrite(trim(subname)//": ERROR data not allocated ", ESMF_LOGMSG_INFO, rc=rc)
-       rc = ESMF_FAILURE
-       return
-    else
-       call ESMF_FieldGet(lfield, mesh=lmesh, rc=rc)
-       if (chkErr(rc,__LINE__,u_FILE_u)) return
-
-       call ESMF_MeshGet(lmesh, numOwnedNodes=nnodes, numOwnedElements=nelements, rc=rc)
-       if (chkErr(rc,__LINE__,u_FILE_u)) return
-
-       if (nnodes == 0 .and. nelements == 0) then
-          call ESMF_LogWrite(trim(subname)//": no local nodes or elements ", ESMF_LOGMSG_INFO)
-          rc = ESMF_FAILURE
-          return
-       end if
-
-       call ESMF_FieldGet(lfield, farrayPtr=fldptr, rc=rc)
-       if (chkErr(rc,__LINE__,u_FILE_u)) return
-    endif  ! status
-
-    call ESMF_LogWrite(trim(subname)//": done", ESMF_LOGMSG_INFO)
-
-  end subroutine state_getfldptr
-
-  !===============================================================================
-  subroutine state_setexport(state, fldname, input, instance_index, rc)
-
-    ! ----------------------------------------------
-    ! Map input array to export state field
-    ! ----------------------------------------------
-
-    ! input/output variables
-    type(ESMF_State)    , intent(inout) :: state
-    character(len=*)    , intent(in)    :: fldname
-    real(r8)            , intent(in)    :: input(:,:)
-    integer             , intent(in)    :: instance_index  ! index of current ice sheet
-    integer             , intent(out)   :: rc
-
-    ! local variables
-    real(R8), pointer         :: fldptr(:)
-    type(ESMF_StateItem_Flag) :: itemFlag
-    character(len=*), parameter :: subname='(glc_import_export:state_setexport)'
-    ! ----------------------------------------------
-
-    rc = ESMF_SUCCESS
-
-    ! Determine if field with name fldname exists in state
-    call ESMF_StateGet(state, trim(fldname), itemFlag, rc=rc)
-    if (chkErr(rc,__LINE__,u_FILE_u)) return
-
-    ! if field exists then create output array - else do nothing
-    if (itemflag /= ESMF_STATEITEM_NOTFOUND) then
-       ! get field pointer
-       call state_getfldptr(state, trim(fldname), fldptr, rc)
+       call state_getfldptr_1d(state, trim(fldname), fldptr, rc)
        if (chkErr(rc,__LINE__,u_FILE_u)) return
 
        ! set fldptr values to input array
@@ -968,7 +870,7 @@ contains
 
     call ESMF_LogWrite(trim(subname)//": done", ESMF_LOGMSG_INFO)
 
-  end subroutine state_getfldptr
+  end subroutine state_getfldptr_1d
 
   !===============================================================================
 

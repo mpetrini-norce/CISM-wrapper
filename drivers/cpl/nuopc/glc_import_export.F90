@@ -765,7 +765,6 @@ contains
        if (chkErr(rc,__LINE__,u_FILE_u)) return
 
        ! determine output array
-       !mp, 2024-06-21 hard-coded, this has to be changed
        do n=1,nlev_import
           call vector_to_spatial(instance_index, fldptr2d(n,:), output(n,:,:))
        end do

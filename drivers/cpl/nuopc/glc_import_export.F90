@@ -60,8 +60,8 @@ module glc_import_export
   character(len=*), parameter :: field_out_icemask_coupled_fluxes = 'Sg_icemask_coupled_fluxes'
   character(len=*), parameter :: field_out_hflx_to_lnd = 'Flgg_hflx'
   character(len=*), parameter :: field_out_rofi_to_ice = 'Figg_rofi'
-  character(len=*), parameter :: field_out_rofi_to_ocn = 'Fogg_rofi'
-  character(len=*), parameter :: field_out_rofl_to_ocn = 'Fogg_rofl'
+  character(len=*), parameter :: field_out_rofi_to_ocn = 'Fgrg_rofi'
+  character(len=*), parameter :: field_out_rofl_to_ocn = 'Fgrg_rofl'
 
   integer, parameter :: nlev_import = 30
   real(r8) :: vertical_levels(nlev_import) = (/  &
@@ -212,27 +212,27 @@ contains
     ! Advertise import fields
     !--------------------------------
 
+    call fldlist_add(fldsToGlc_num, fldsToGlc, trim(flds_scalar_name))
+    call fldlist_add(fldsToGlc_num, fldsToGlc, field_in_tsrf)
+    call fldlist_add(fldsToGlc_num, fldsToGlc, field_in_qice)
     if (cism_evolve) then
-       call fldlist_add(fldsToGlc_num, fldsToGlc, trim(flds_scalar_name))
-       call fldlist_add(fldsToGlc_num, fldsToGlc, field_in_tsrf)
-       call fldlist_add(fldsToGlc_num, fldsToGlc, field_in_qice)
        call fldlist_add(fldsToGlc_num, fldsToGlc, field_in_so_t_depth, ungridded_lbound=1, ungridded_ubound=nlev_import)
        call fldlist_add(fldsToGlc_num, fldsToGlc, field_in_so_s_depth, ungridded_lbound=1, ungridded_ubound=nlev_import)
+     end if
 
-       ! Now advertise import fields
-       do ns = 1,num_icesheets
-          do nf = 1,fldsToGlc_num
-             call NUOPC_Advertise(NStateImp(ns), standardName=fldsToGlc(nf)%stdname, &
-                  TransferOfferGeomObject='will provide', rc=rc)
-             if (chkErr(rc,__LINE__,u_FILE_u)) return
-             if (my_task == master_task) then
-                write(cnum,'(i0)') ns
-                write(stdout,'(a)') 'Advertised import field: '//trim(fldsToGlc(nf)%stdname)//' for ice sheet '//trim(cnum)
-             end if
-             call ESMF_LogWrite(subname//'Import field'//': '//trim(fldsToGlc(nf)%stdname), ESMF_LOGMSG_INFO)
-          end do
-       enddo
-    end if
+     ! Now advertise import fields
+     do ns = 1,num_icesheets
+       do nf = 1,fldsToGlc_num
+         call NUOPC_Advertise(NStateImp(ns), standardName=fldsToGlc(nf)%stdname, &
+              TransferOfferGeomObject='will provide', rc=rc)
+         if (chkErr(rc,__LINE__,u_FILE_u)) return
+         if (my_task == master_task) then
+           write(cnum,'(i0)') ns
+           write(stdout,'(a)') 'Advertised import field: '//trim(fldsToGlc(nf)%stdname)//' for ice sheet '//trim(cnum)
+         end if
+         call ESMF_LogWrite(subname//'Import field'//': '//trim(fldsToGlc(nf)%stdname), ESMF_LOGMSG_INFO)
+       end do
+     enddo
 
     ! Set glc_smb
     ! true  => get surface mass balance from land model via coupler (in multiple elev classes)

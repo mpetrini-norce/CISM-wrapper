@@ -538,14 +538,14 @@ Sub-elements of each entry include:
 
   <entry id="ny_block" >
     <type>integer</type>
-    <category>cism_config_grid</category>                                                                  
+    <category>cism_config_grid</category>
     <group>grid</group>
-    <values>                                                                                               
+    <values>
       <value>0</value>
     </values>
-    <desc>                                                                                                 
-      User-specified block sizes, one task per block; optionally, tasks not assigned to inactive blocks    
-      Default: 0  
+    <desc>
+      User-specified block sizes, one task per block; optionally, tasks not assigned to inactive blocks
+      Default: 0
     </desc>
   </entry>
 
@@ -786,7 +786,7 @@ Sub-elements of each entry include:
       3: Depth-dependent basal melt rate for floating ice
       4: External basal melt rate field (from input file or coupler)
       5: [NOT SUPPORTED] Basal melt rate for floating ice from MISOMIP ocean forcing with plume model
-      6: Basal melt rate for floating ice derived from ocean thermal forcing 
+      6: Basal melt rate for floating ice derived from ocean thermal forcing
       Default: 0 for Greenland, 6 for Antarctica
     </desc>
   </entry>
@@ -805,7 +805,7 @@ Sub-elements of each entry include:
       2: highest forcing magnitude
     </desc>
   </entry>
-  
+
   <entry id="bmlt_float_thermal_forcing_param">
     <type>integer</type>
     <category>cism_config_options</category>
@@ -934,7 +934,7 @@ Sub-elements of each entry include:
     </values>
     <desc>
       If true, then identify and remove ice isthmuses after calving.
-      These are narrow bridges connecting two regions of floating ice.              
+      These are narrow bridges connecting two regions of floating ice.
       False by default, but may need to be true for the FORCE_RETREAT_FLOATING_ICE option.
       Default: .false.
     </desc>
@@ -1199,10 +1199,7 @@ Sub-elements of each entry include:
            code in a more typical configuration (i.e., with a sub-annual time step) -->
       <value icesheet="gris" glc_grid="gris20">0.5</value>
       <value icesheet="gris" glc_grid="gris4" >0.1</value>
-
-      <!-- Gunter used nsteps_per_year = 6. Can we use that instead of
-           dt here? -->
-      <value icesheet="ais"  glc_grid="ais8"  >0.2</value>
+      <value icesheet="ais"  glc_grid="ais8"  >0.1</value>
     </values>
     <desc>
       Ice sheet timestep (years)
@@ -1259,7 +1256,7 @@ Sub-elements of each entry include:
       <value>0</value>
     </values>
     <desc>
-      Set dt_option to specify whether the dynamic timestep (model%numerics%tinc) 
+      Set dt_option to specify whether the dynamic timestep (model%numerics%tinc)
       is based on dt (the timestep in years) or nsteps_per_year in the config file.
       The default (dt_option = 0) is to read dt directly,
       but the nsteps_per_year option allows more flexibility.
@@ -1290,8 +1287,7 @@ Sub-elements of each entry include:
       <!-- Set dt_diag same as dt in order to get diagnostics every time step -->
       <value icesheet="gris" glc_grid="gris20">0.5</value>
       <value icesheet="gris" glc_grid="gris4" >0.1</value>
-
-      <value icesheet="ais"  glc_grid="ais8"  >0.2</value>
+      <value icesheet="ais"  glc_grid="ais8"  >0.1</value>
     </values>
     <desc>
       Diagnostic frequency (years)
@@ -1391,7 +1387,7 @@ Sub-elements of each entry include:
     <values>
       <value>1.0e-8</value>
     </values>
-    <desc>                                                                                                                                
+    <desc>
       Thickness scale (in meters) over which gradients increase from zero to full value (HO only)
       Default: 1.0e-8
     </desc>
@@ -2038,7 +2034,7 @@ Sub-elements of each entry include:
       <value>10.0</value>
     </values>
     <desc>
-      Scale for rate of change of bmlt w/temperature, m/yr/degC 
+      Scale for rate of change of bmlt w/temperature, m/yr/degC
       Default: 10.0
     </desc>
   </entry>
@@ -2120,7 +2116,7 @@ Sub-elements of each entry include:
     </values>
     <desc>
       Parameters for power law, taub_b = C * u_b^(1/m); used for HO_BABC_COULOMB_POWERLAW_TSAI/SCHOOF
-      Friction coefficient in power law, units of Pa m^(-1/3) yr^(1/3) 
+      Friction coefficient in power law, units of Pa m^(-1/3) yr^(1/3)
       Default: 1e4 for Greenland, 2e4 for Antarctica
     </desc>
   </entry>
@@ -2148,8 +2144,8 @@ Sub-elements of each entry include:
     </values>
     <desc>
       Parameters for power law, taub_b = C * u_b^(1/m); used for HO_BABC_COULOMB_POWERLAW_TSAI/SCHOOF
-      Note: These values work well for MISMIP+, but may not be optimal for whole ice sheets. 
-      Max value of powerlaw_c, Pa (m/yr)^(-1/3) 
+      Note: These values work well for MISMIP+, but may not be optimal for whole ice sheets.
+      Max value of powerlaw_c, Pa (m/yr)^(-1/3)
       Default: 1.0e+5
     </desc>
   </entry>
@@ -2164,8 +2160,8 @@ Sub-elements of each entry include:
     </values>
     <desc>
       Parameters for power law, taub_b = C * u_b^(1/m); used for HO_BABC_COULOMB_POWERLAW_TSAI/SCHOOF
-      Note: These values work well for MISMIP+, but may not be optimal for whole ice sheets. 
-      Max value of powerlaw_c, Pa (m/yr)^(-1/3) 
+      Note: These values work well for MISMIP+, but may not be optimal for whole ice sheets.
+      Max value of powerlaw_c, Pa (m/yr)^(-1/3)
       Default: 1.0e+2 for Greenland, 10. for Antarctica
     </desc>
   </entry>
@@ -2274,7 +2270,7 @@ Sub-elements of each entry include:
       <value icesheet="ais" >60.</value>
     </values>
     <desc>
-      Thickness of ocean levels (ISMIP6-style ocean data input); 
+      Thickness of ocean levels (ISMIP6-style ocean data input);
       nonzero value set in config file
       Default: 0.0 for Greenland, 60. for Antarctica
     </desc>
@@ -2339,7 +2335,7 @@ Sub-elements of each entry include:
     </values>
     <desc>
       Flag for setting minimum beta beneath grounded ice.
-      0: Absolute limit given by beta_grounded_min 
+      0: Absolute limit given by beta_grounded_min
       1: Limited using beta_grounded_min, then multiplied by f_ground
       Default: 0 for Greenland, 1 for Antarctica
     </desc>
@@ -2357,9 +2353,9 @@ Sub-elements of each entry include:
     <desc>
       Flag for basal inversion options: invert for Cp = powerlaw_c
       Note: Cp inversion is currently supported for which_ho_babc = 9 and 11 only
-      0: no inversion                                                                             
-      1: invert for basal friction parameter Cp                                                   
-      2: apply Cp from a previous inversion  
+      0: no inversion
+      1: invert for basal friction parameter Cp
+      2: apply Cp from a previous inversion
       Default: 0 for Greenland, 1 for Antarctica
     </desc>
   </entry>
@@ -2374,8 +2370,8 @@ Sub-elements of each entry include:
       <value icesheet="ais" >1</value>
     </values>
     <desc>
-      Flag for inversion of basin-based basal melting parameters 
-      0: no inversion                                                                             
+      Flag for inversion of basin-based basal melting parameters
+      0: no inversion
       1: invert for basin-based melting parameters
       2: apply basin-based melting parameters from a previous inversion
       Default: 0 for Greenland, 1 for Antarctica
@@ -2429,7 +2425,7 @@ Sub-elements of each entry include:
       <value>0</value>
     </values>
     <desc>
-      0: Compute on all blocks in the global domain; one task per block 
+      0: Compute on all blocks in the global domain; one task per block
       1: Compute on active blocks only; one task per active block, no task for some or all inactive blocks
       2: Inquire how many active blocks there are, in prep for resubmitting with option 1
       Default: 0
@@ -2536,7 +2532,7 @@ Sub-elements of each entry include:
     </values>
     <desc>
       Flag that indicates method for solving the nonlinear iteration when solving the first-
-      order momentum balance 
+      order momentum balance
       0: Use the standard Picard iteration
       1: Do Picard iteration with acceleration
       Default: 1
@@ -2682,10 +2678,10 @@ Sub-elements of each entry include:
     <values>
       <value>1</value>
     </values>
-    <desc>                                                                                                                
-      Flag that describes how lateral stress terms are assembled in the glissade finite-element calculation 
+    <desc>
+      Flag that describes how lateral stress terms are assembled in the glissade finite-element calculation
       0: Standard finite-element calculation of thck and usrf at quadrature points
-      1: Apply local cell-center value of thck and usrf on each face 
+      1: Apply local cell-center value of thck and usrf on each face
       Default: 1
     </desc>
   </entry>
@@ -2738,7 +2734,7 @@ Sub-elements of each entry include:
     </values>
     <desc>
       Flag that indicates how to compute bmlt_float in partly grounded cells
-      0: Apply bmlt_float in all floating cells, based on floating_mask 
+      0: Apply bmlt_float in all floating cells, based on floating_mask
       1: Do not apply bmlt_float in partly grounded cells
       2: Set bmlt_float = 0 in partly grounded cells (f_ground > 0)
       Default: 0

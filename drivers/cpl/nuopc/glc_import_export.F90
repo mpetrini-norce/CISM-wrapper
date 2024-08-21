@@ -32,9 +32,11 @@ module glc_import_export
 
   private :: fldlist_add
   private :: fldlist_realize
-  private :: state_getimport
+  private :: state_getimport_2d
+  private :: state_getimport_3d
   private :: state_setexport
-  private :: state_getfldptr
+  private :: state_getfldptr_1d
+  private :: state_getfldptr_2d
 
   character(len=CL) :: flds_scalar_name = ''
   integer           :: flds_scalar_num = 0
@@ -43,11 +45,16 @@ module glc_import_export
 
   type fld_list_type
      character(len=128) :: stdname
+     integer :: ungridded_lbound = 0
+     integer :: ungridded_ubound = 0
   end type fld_list_type
 
   ! Field names
   character(len=*), parameter :: field_in_tsrf = 'Sl_tsrf'
   character(len=*), parameter :: field_in_qice = 'Flgl_qice'
+  character(len=*), parameter :: field_in_so_t_depth = 'So_t_depth'
+  character(len=*), parameter :: field_in_so_s_depth = 'So_s_depth'
+
   character(len=*), parameter :: field_out_area = 'Sg_area'
   character(len=*), parameter :: field_out_ice_covered = 'Sg_ice_covered'
   character(len=*), parameter :: field_out_topo = 'Sg_topo'
@@ -55,8 +62,14 @@ module glc_import_export
   character(len=*), parameter :: field_out_icemask_coupled_fluxes = 'Sg_icemask_coupled_fluxes'
   character(len=*), parameter :: field_out_hflx_to_lnd = 'Flgg_hflx'
   character(len=*), parameter :: field_out_rofi_to_ice = 'Figg_rofi'
-  character(len=*), parameter :: field_out_rofi_to_ocn = 'Fogg_rofi'
-  character(len=*), parameter :: field_out_rofl_to_ocn = 'Fogg_rofl'
+  character(len=*), parameter :: field_out_rofi_to_ocn = 'Fgrg_rofi'
+  character(len=*), parameter :: field_out_rofl_to_ocn = 'Fgrg_rofl'
+
+  integer, parameter :: nlev_import = 30
+  real(r8) :: vertical_levels(nlev_import) = (/  &
+       30., 90., 150., 210., 270., 330., 390., 450., 510., 570., &
+       630., 690., 750., 810., 870., 930., 990., 1050., 1110., 1170., &
+       1230., 1290., 1350., 1410., 1470., 1530., 1590., 1650., 1710., 1770. /)
 
   integer, parameter     :: fldsMax = 100
   integer                :: fldsToGlc_num = 0
@@ -201,25 +214,27 @@ contains
     ! Advertise import fields
     !--------------------------------
 
+    call fldlist_add(fldsToGlc_num, fldsToGlc, trim(flds_scalar_name))
+    call fldlist_add(fldsToGlc_num, fldsToGlc, field_in_tsrf)
+    call fldlist_add(fldsToGlc_num, fldsToGlc, field_in_qice)
     if (cism_evolve) then
-       call fldlist_add(fldsToGlc_num, fldsToGlc, trim(flds_scalar_name))
-       call fldlist_add(fldsToGlc_num, fldsToGlc, field_in_tsrf)
-       call fldlist_add(fldsToGlc_num, fldsToGlc, field_in_qice)
+       call fldlist_add(fldsToGlc_num, fldsToGlc, field_in_so_t_depth, ungridded_lbound=1, ungridded_ubound=nlev_import)
+       call fldlist_add(fldsToGlc_num, fldsToGlc, field_in_so_s_depth, ungridded_lbound=1, ungridded_ubound=nlev_import)
+     end if
 
-       ! Now advertise import fields
-       do ns = 1,num_icesheets
-          do nf = 1,fldsToGlc_num
-             call NUOPC_Advertise(NStateImp(ns), standardName=fldsToGlc(nf)%stdname, &
-                  TransferOfferGeomObject='will provide', rc=rc)
-             if (chkErr(rc,__LINE__,u_FILE_u)) return
-             if (my_task == master_task) then
-                write(cnum,'(i0)') ns
-                write(stdout,'(a)') 'Advertised import field: '//trim(fldsToGlc(nf)%stdname)//' for ice sheet '//trim(cnum)
-             end if
-             call ESMF_LogWrite(subname//'Import field'//': '//trim(fldsToGlc(nf)%stdname), ESMF_LOGMSG_INFO)
-          end do
-       enddo
-    end if
+     ! Now advertise import fields
+     do ns = 1,num_icesheets
+       do nf = 1,fldsToGlc_num
+         call NUOPC_Advertise(NStateImp(ns), standardName=fldsToGlc(nf)%stdname, &
+              TransferOfferGeomObject='will provide', rc=rc)
+         if (chkErr(rc,__LINE__,u_FILE_u)) return
+         if (my_task == master_task) then
+           write(cnum,'(i0)') ns
+           write(stdout,'(a)') 'Advertised import field: '//trim(fldsToGlc(nf)%stdname)//' for ice sheet '//trim(cnum)
+         end if
+         call ESMF_LogWrite(subname//'Import field'//': '//trim(fldsToGlc(nf)%stdname), ESMF_LOGMSG_INFO)
+       end do
+     enddo
 
     ! Set glc_smb
     ! true  => get surface mass balance from land model via coupler (in multiple elev classes)
@@ -301,23 +316,38 @@ contains
     do ns = 1,num_icesheets
        associate(&
             tsfc => cpl_bundles(ns)%tsfc, &
-            qsmb => cpl_bundles(ns)%qsmb)
+            qsmb => cpl_bundles(ns)%qsmb, &
+            tocn => cpl_bundles(ns)%tocn, &
+            salinity => cpl_bundles(ns)%salinity)
 
-       call state_getimport(NStateImp(ns), field_in_tsrf, tsfc, &
+       call state_getimport_2d(NStateImp(ns), field_in_tsrf, tsfc, &
             instance_index=ns, rc=rc)
        if (chkErr(rc,__LINE__,u_FILE_u)) return
-       call state_getimport(NStateImp(ns), field_in_qice, qsmb, &
+       call state_getimport_2d(NStateImp(ns), field_in_qice, qsmb, &
             instance_index=ns, rc=rc)
        if (chkErr(rc,__LINE__,u_FILE_u)) return
 
        tsfc = tsfc - tkfrz
 
-       !Jer hack fix:
        !For some land points where CLM sees ocean, and all ocean points, CLM doesn't provide a temperature,
        !and so the incoming temperature is 0.d0.  This gets dropped to -273.15, in the above code.  So,
        !manually reverse this, below, to set to 0C.
 
        where (tsfc < -250.d0) tsfc=0.d0
+
+       !mp; 2024-06-19; reading here ocean t and s; we will calculate ocean
+       !thermal forcing later on. (idea would be to use 3d thermal_forcing
+       !variable already defined, as this is the variable for which
+       !extrapolation algorithm is available;
+       !Additional comment: found 3D variables tocn, salinity in routines that
+       !seems to be perfect to be used - see for instance comment by wjs in
+       !glc_InitMod.F90, 2021-06-25.
+       call state_getimport_3d(NStateImp(ns), field_in_so_t_depth, tocn, &
+            instance_index=ns, rc=rc)
+       if (chkErr(rc,__LINE__,u_FILE_u)) return
+       call state_getimport_3d(NStateImp(ns), field_in_so_s_depth, &
+            salinity, instance_index=ns, rc=rc)
+       if (chkErr(rc,__LINE__,u_FILE_u)) return
 
        if (dbug_flag > 0) then
           call State_diagnose(NStateImp(ns), subname//':ES',rc=rc)
@@ -510,12 +540,14 @@ contains
 
   !===============================================================================
 
-  subroutine fldlist_add(num, fldlist, stdname)
+  subroutine fldlist_add(num, fldlist, stdname, ungridded_lbound, ungridded_ubound)
 
     ! intput/output variables
-    integer,                    intent(inout) :: num
-    type(fld_list_type),        intent(inout) :: fldlist(:)
-    character(len=*),           intent(in)    :: stdname
+    integer             ,             intent(inout) :: num
+    type(fld_list_type) ,             intent(inout) :: fldlist(:)
+    character(len=*)    ,             intent(in)    :: stdname
+    integer             , optional  , intent(in)    :: ungridded_lbound
+    integer             , optional  , intent(in)    :: ungridded_ubound
 
     ! local variables
     integer :: rc
@@ -531,6 +563,11 @@ contains
        return
     endif
     fldlist(num)%stdname = trim(stdname)
+
+    if (present(ungridded_lbound) .and. present(ungridded_ubound)) then
+       fldlist(num)%ungridded_lbound = ungridded_lbound
+       fldlist(num)%ungridded_ubound = ungridded_ubound
+    end if
 
   end subroutine fldlist_add
 
@@ -558,6 +595,7 @@ contains
     integer                :: n
     type(ESMF_Field)       :: field
     character(len=80)      :: stdname
+    character(CL)          :: msg
     character(len=*),parameter  :: subname='(glc_import_export:fldlist_realize)'
     ! ----------------------------------------------
 
@@ -578,13 +616,24 @@ contains
                 write(stdout,'(a)') trim(subname)//trim(tag)//" Field = "//trim(stdname)//" is connected on root pe only"
              end if
           else
-             call ESMF_LogWrite(trim(subname)//trim(tag)//" Field = "//trim(stdname)//" is connected using mesh", &
-                  ESMF_LOGMSG_INFO)
              ! Create the field
-             field = ESMF_FieldCreate(mesh, ESMF_TYPEKIND_R8, name=stdname, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
-             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=u_FILE_u)) return
-             if (my_task == master_task) then
-                write(stdout,'(a)') trim(subname)//trim(tag)//" Field = "//trim(stdname)//" is connected using mesh"
+             if (fldlist(n)%ungridded_lbound > 0 .and. fldlist(n)%ungridded_ubound > 0) then
+                field = ESMF_FieldCreate(mesh, ESMF_TYPEKIND_R8, name=stdname, meshloc=ESMF_MESHLOC_ELEMENT, &
+                     ungriddedLbound=(/fldlist(n)%ungridded_lbound/), &
+                     ungriddedUbound=(/fldlist(n)%ungridded_ubound/), &
+                     gridToFieldMap=(/2/), rc=rc)
+                if (ChkErr(rc,__LINE__,u_FILE_u)) return
+                if (my_task == master_task) then
+                   write(stdout,'(a,i8,a,i8)') trim(subname)// trim(tag)//" Field = "//trim(stdname)// &
+                        " is connected using mesh with lbound ", fldlist(n)%ungridded_lbound,&
+                        " and with ubound ",fldlist(n)%ungridded_ubound
+                end if
+             else
+                field = ESMF_FieldCreate(mesh, ESMF_TYPEKIND_R8, name=stdname, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
+                if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=u_FILE_u)) return
+                if (my_task == master_task) then
+                   write(stdout,'(a)') trim(subname)//trim(tag)//" Field = "//trim(stdname)//" is connected using mesh"
+                end if
              end if
           endif
 
@@ -644,7 +693,7 @@ contains
 
   !===============================================================================
 
-  subroutine state_getimport(state, fldname, output, instance_index, rc)
+  subroutine state_getimport_2d(state, fldname, output, instance_index, rc)
 
     ! ----------------------------------------------
     ! Map import state field to output array
@@ -660,7 +709,7 @@ contains
     ! local variables
     real(R8), pointer         :: fldptr(:)
     type(ESMF_StateItem_Flag) :: itemFlag
-    character(len=*), parameter :: subname='(glc_import_export:state_getimport)'
+    character(len=*), parameter :: subname='(glc_import_export:state_getimport_2d)'
     ! ----------------------------------------------
 
     rc = ESMF_SUCCESS
@@ -672,14 +721,56 @@ contains
     ! If field exists then create output array - else do nothing
     if (itemflag /= ESMF_STATEITEM_NOTFOUND) then
        ! get field pointer
-       call state_getfldptr(state, trim(fldname), fldptr, rc)
+       call state_getfldptr_1d(state, trim(fldname), fldptr, rc)
        if (chkErr(rc,__LINE__,u_FILE_u)) return
 
        ! determine output array
        call vector_to_spatial(instance_index, fldptr, output)
     end if
 
-  end subroutine state_getimport
+  end subroutine state_getimport_2d
+
+  !===============================================================================
+
+  subroutine state_getimport_3d(state, fldname, output, instance_index, rc)
+
+    ! ----------------------------------------------
+    ! Map import state field to output array
+    ! ----------------------------------------------
+
+    ! input/output variables
+    type(ESMF_State)    , intent(in)    :: state
+    character(len=*)    , intent(in)    :: fldname
+    real(r8)            , intent(out)   :: output(:,:,:)
+    integer             , intent(in)    :: instance_index  ! index of current ice sheet
+    integer             , intent(out)   :: rc
+
+    ! local variables
+    real(R8), pointer         :: fldptr2d(:,:)
+    type(ESMF_StateItem_Flag) :: itemFlag
+    character(len=*), parameter :: subname='(glc_import_export:state_getimport_3d)'
+    integer :: n
+    ! ----------------------------------------------
+
+    rc = ESMF_SUCCESS
+
+    ! Determine if field with name fldname exists in state
+    call ESMF_StateGet(state, trim(fldname), itemFlag, rc=rc)
+    if (chkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! If field exists then create output array - else do nothing
+    if (itemflag /= ESMF_STATEITEM_NOTFOUND) then
+       ! get field pointer
+       call state_getfldptr_2d(state, trim(fldname), fldptr2d, rc)
+       if (chkErr(rc,__LINE__,u_FILE_u)) return
+
+       ! determine output array
+       do n=1,nlev_import
+          call vector_to_spatial(instance_index, fldptr2d(n,:), output(n,:,:))
+       end do
+    end if
+
+  end subroutine state_getimport_3d
 
   !===============================================================================
 
@@ -711,7 +802,7 @@ contains
     ! if field exists then create output array - else do nothing
     if (itemflag /= ESMF_STATEITEM_NOTFOUND) then
        ! get field pointer
-       call state_getfldptr(state, trim(fldname), fldptr, rc)
+       call state_getfldptr_1d(state, trim(fldname), fldptr, rc)
        if (chkErr(rc,__LINE__,u_FILE_u)) return
 
        ! set fldptr values to input array
@@ -722,7 +813,7 @@ contains
 
   !===============================================================================
 
-  subroutine state_getfldptr(State, fldname, fldptr, rc)
+  subroutine state_getfldptr_1d(State, fldname, fldptr, rc)
 
     ! ----------------------------------------------
     ! Get pointer to a state field
@@ -743,7 +834,7 @@ contains
     type(ESMF_Field)            :: lfield
     type(ESMF_Mesh)             :: lmesh
     integer                     :: nnodes, nelements
-    character(len=*), parameter :: subname='(glc_import_export:state_getfldptr)'
+    character(len=*), parameter :: subname='(glc_import_export:state_getfldptr_1d)'
     ! ----------------------------------------------
 
     rc = ESMF_SUCCESS
@@ -774,10 +865,70 @@ contains
 
        call ESMF_FieldGet(lfield, farrayPtr=fldptr, rc=rc)
        if (chkErr(rc,__LINE__,u_FILE_u)) return
-    endif  ! status
+     endif  ! status
 
     call ESMF_LogWrite(trim(subname)//": done", ESMF_LOGMSG_INFO)
 
-  end subroutine state_getfldptr
+  end subroutine state_getfldptr_1d
+
+  !===============================================================================
+
+  subroutine state_getfldptr_2d(State, fldname, fldptr2d, rc)
+
+    ! ----------------------------------------------
+    ! Get pointer to a state field
+    ! ----------------------------------------------
+
+    use ESMF , only : ESMF_State, ESMF_Field, ESMF_Mesh, ESMF_FieldStatus_Flag
+    use ESMF , only : ESMF_StateGet, ESMF_FieldGet, ESMF_MeshGet
+    use ESMF , only : ESMF_FIELDSTATUS_COMPLETE, ESMF_FAILURE
+
+    ! input/output variables
+    type(ESMF_State),  intent(in)    :: State
+    character(len=*),  intent(in)    :: fldname
+    real(R8), pointer, intent(out)   :: fldptr2d(:,:)
+    integer,           intent(out)   :: rc
+
+    ! local variables
+    type(ESMF_FieldStatus_Flag) :: status
+    type(ESMF_Field)            :: lfield
+    type(ESMF_Mesh)             :: lmesh
+    integer                     :: nnodes, nelements
+    character(len=*), parameter :: subname='(glc_import_export:state_getfldptr_2d)'
+    ! ----------------------------------------------
+
+    rc = ESMF_SUCCESS
+    call ESMF_LogWrite(trim(subname)//": called", ESMF_LOGMSG_INFO)
+
+    call ESMF_StateGet(State, itemName=trim(fldname), field=lfield, rc=rc)
+    if (chkErr(rc,__LINE__,u_FILE_u)) return
+
+    call ESMF_FieldGet(lfield, status=status, rc=rc)
+    if (chkErr(rc,__LINE__,u_FILE_u)) return
+
+    if (status /= ESMF_FIELDSTATUS_COMPLETE) then
+       call ESMF_LogWrite(trim(subname)//": ERROR data not allocated ", ESMF_LOGMSG_INFO, rc=rc)
+       rc = ESMF_FAILURE
+       return
+    else
+       call ESMF_FieldGet(lfield, mesh=lmesh, rc=rc)
+       if (chkErr(rc,__LINE__,u_FILE_u)) return
+
+       call ESMF_MeshGet(lmesh, numOwnedNodes=nnodes, numOwnedElements=nelements, rc=rc)
+       if (chkErr(rc,__LINE__,u_FILE_u)) return
+
+       if (nnodes == 0 .and. nelements == 0) then
+          call ESMF_LogWrite(trim(subname)//": no local nodes or elements ", ESMF_LOGMSG_INFO)
+          rc = ESMF_FAILURE
+          return
+       end if
+
+       call ESMF_FieldGet(lfield, farrayPtr=fldptr2d, rc=rc)
+       if (chkErr(rc,__LINE__,u_FILE_u)) return
+     endif  ! status
+
+    call ESMF_LogWrite(trim(subname)//": done", ESMF_LOGMSG_INFO)
+
+  end subroutine state_getfldptr_2d
 
 end module glc_import_export

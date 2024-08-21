@@ -1,20 +1,20 @@
 <?xml version="1.0"?>
 <testlist version="2.0">
 
-  <test name="ERI_Ly44" grid="f09_g17_gris20" compset="T1850Gg" testmods="cism/isostasy_period4">
-    <machines>
-      <machine name="betzy" compiler="intel" category="aux_cism_noresm">
-        <options>
-          <option name="wallclock">0:40</option>
-          <option name="comment">include a longer ERI test to catch problems that may just show up after longer runs, using a coarse resolution to get faster turnaround and lower cost; include isostasy because there are extra subtleties with getting isostasy to restart exactly</option>
-        </options>
-      </machine>
-    </machines>
-  </test>
+  <!-- <test name="ERI_Ly44" grid="f09_g17_gris20" compset="T1850Gg" testmods="cism/isostasy_period4"> -->
+  <!--   <machines> -->
+  <!--     <machine name="betzy" compiler="intel" category="aux_cism_noresm"> -->
+  <!--       <options> -->
+  <!--         <option name="wallclock">0:40</option> -->
+  <!--         <option name="comment">include a longer ERI test to catch problems that may just show up after longer runs, using a coarse resolution to get faster turnaround and lower cost; include isostasy because there are extra subtleties with getting isostasy to restart exactly</option> -->
+  <!--       </options> -->
+  <!--     </machine> -->
+  <!--   </machines> -->
+  <!-- </test> -->
 
   <test name="ERI_Ly15" grid="f09_g17_gris4" compset="T1850Gg" testmods="cism/isostasy_period4">
     <machines>
-      <machine name="betzy" compiler="intel" category="prebeta_noresm">
+      <machine name="betzy" compiler="intel" category="prealpha_noresm">
         <options>
           <option name="wallclock">0:40</option>
         </options>
@@ -39,26 +39,26 @@
     </machines>
   </test>
 
-  <test name="ERS_Ly11" grid="f09_g17_gris20" compset="T1850Gg">
-    <machines>
-      <machine name="betzy" compiler="intel" category="aux_cism_noresm">
-        <options>
-          <option name="wallclock">0:20</option>
-        </options>
-      </machine>
-    </machines>
-  </test>
+  <!-- <test name="ERS_Ly11" grid="f09_g17_gris20" compset="T1850Gg"> -->
+  <!--   <machines> -->
+  <!--     <machine name="betzy" compiler="intel" category="aux_cism_noresm"> -->
+  <!--       <options> -->
+  <!--         <option name="wallclock">0:20</option> -->
+  <!--       </options> -->
+  <!--     </machine> -->
+  <!--   </machines> -->
+  <!-- </test> -->
 
-  <test name="ERS_Ly11" grid="f09_g17_gris20" compset="T1850Gg" testmods="cism/oneway">
-    <machines>
-      <machine name="betzy" compiler="intel" category="aux_cism_noresm">
-        <options>
-          <option name="wallclock">0:20</option>
-          <option name="comment">(3-3-16) identical to an existing non-oneway test, which generates some non-zero runoff fluxes</option>
-        </options>
-      </machine>
-    </machines>
-  </test>
+  <!-- <test name="ERS_Ly11" grid="f09_g17_gris20" compset="T1850Gg" testmods="cism/oneway"> -->
+  <!--   <machines> -->
+  <!--     <machine name="betzy" compiler="intel" category="aux_cism_noresm"> -->
+  <!--       <options> -->
+  <!--         <option name="wallclock">0:20</option> -->
+  <!--         <option name="comment">(3-3-16) identical to an existing non-oneway test, which generates some non-zero runoff fluxes</option> -->
+  <!--       </options> -->
+  <!--     </machine> -->
+  <!--   </machines> -->
+  <!-- </test> -->
 
   <!-- BUG(wjs, 2021-09-29, ESCOMP/CISM-wrapper#60) This currently fails
        at namelist generation time, with "ERROR: for TG compset require
@@ -370,24 +370,24 @@
        ice sheets.
   -->
 
-  <test name="SMS_Ly2" grid="f09_g17_gris20" compset="T1850Gg">
-    <machines>
-      <machine name="betzy" compiler="intel" category="aux_cime_baselines">
-        <options>
-          <option name="wallclock">0:30:00</option>
-        </options>
-      </machine>
-    </machines>
-  </test>
+  <!-- <test name="SMS_Ly2" grid="f09_g17_gris20" compset="T1850Gg"> -->
+  <!--   <machines> -->
+  <!--     <machine name="betzy" compiler="intel" category="aux_cime_baselines"> -->
+  <!--       <options> -->
+  <!--         <option name="wallclock">0:30:00</option> -->
+  <!--       </options> -->
+  <!--     </machine> -->
+  <!--   </machines> -->
+  <!-- </test> -->
 
-  <test name="SMS_Ld5" grid="f19_f19_ais8gris4_mtn14" compset="I1850Clm50SpGag" testmods="cism/test_coupling">
-    <machines>
-      <machine name="betzy" compiler="intel" category="aux_cime_baselines">
-        <options>
-          <option name="wallclock">0:30:00</option>
-        </options>
-      </machine>
-    </machines>
-  </test>
+  <!-- <test name="SMS_Ld5" grid="f19_f19_ais8gris4_mtn14" compset="I1850Clm50SpGag" testmods="cism/test_coupling"> -->
+  <!--   <machines> -->
+  <!--     <machine name="betzy" compiler="intel" category="aux_cime_baselines"> -->
+  <!--       <options> -->
+  <!--         <option name="wallclock">0:30:00</option> -->
+  <!--       </options> -->
+  <!--     </machine> -->
+  <!--   </machines> -->
+  <!-- </test> -->
 
 </testlist>

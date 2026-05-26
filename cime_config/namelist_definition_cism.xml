@@ -903,6 +903,21 @@ Sub-elements of each entry include:
     </desc>
   </entry>
 
+  <entry id="frontal_melt_factor">
+    <type>real</type>
+    <category>cism_config_options</category>
+    <group>options</group>
+    <values>
+      <value icesheet="gris">1.0</value>
+      <value icesheet="ais" >1.0</value>
+    </values>
+    <desc>
+      Multiplier for Rignot frontal melt parameterisation. 
+	  May be used for sampling uncertainty in the parameterisation and to correct for resolution depencence
+      Default: 1.0 
+    </desc>
+  </entry>
+
   <entry id="calving_domain">
     <type>integer</type>
     <category>cism_config_options</category>

@@ -5,7 +5,7 @@
 path = source_cism
 url = https://github.com/NorESMhub/CISM
 #fxtag = cism_main_2.01.017_noresm_v5
-fxtag = 110a5e83
+fxtag = 186b85a3
 fxrequired = AlwaysRequired
 fxDONOTUSEurl = https://github.com/NorESMhub/CISM
 

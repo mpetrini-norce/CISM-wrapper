@@ -431,12 +431,10 @@
   ! Assume that ihour0 = iminute0 = isecond0 = 0
   ! Note that glad does not handle leap years
 
-  ! Set the message level to 0 so that CISM diagnostic output goes only to
-  ! glc.log (via glimmer_unit) and not also to cesm.log (via write(*,*)).
-  ! Fatal errors are still written to * regardless of this setting.
+  ! Set the message level (1 is the default - only fatal errors)
   ! N.B. Must do this after initialization
 
-  call glimmer_set_msg_level(0)
+  call glimmer_set_msg_level(6)
 
 !-----------------------------------------------------------------------
 !
